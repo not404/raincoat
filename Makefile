@@ -1,7 +1,7 @@
 all: raincoat
 
 raincoat: raincoat.c BootFlash.c boot.h BootFlash.h
-	gcc -O2 -Wall -Werror -o raincoat raincoat.c BootFlash.c
+	gcc -static -O2 -Wall -Werror -o raincoat raincoat.c BootFlash.c
 
 clean:
 	rm -f *.o
