@@ -31,20 +31,24 @@
 
 #include "BootFlash.h"
 
-#define RAINCOAT_VERSION "0.3"
+#define RAINCOAT_VERSION "0.4"
 
 bool FlashingCallback(void * pvoidObjectFlash, ENUM_EVENTS ee, DWORD dwPos, DWORD dwExtent);
 
 OBJECT_FLASH objectflash;
 
 KNOWN_FLASH_TYPE aknownflashtype[32] = { // max 31 flash types known
-#if 0
-	{ 0xbf, 0x61, "SST49LF020", 0x40000 },  // default flash types
-	{ 0x01, 0xd5, "Am29F080B", 0x100000 },  // default flash types
-	{ 0x04, 0xd5, "Fujitsu MBM29F080A", 0x100000 },  // default flash types
-	{ 0xad, 0xd5, "Hynix HY29F080", 0x100000 },  // default flash types
-	{ 0x20, 0xf1, "ST M29F080A", 0x100000 },  // default flash types
-#endif
+		  
+		  // default flash types used if /etc/raincoat.conf not available
+	
+	{ 0xbf, 0x61, "SST49LF020", 0x40000 }, 
+	{ 0x01, 0xd5, "Am29F080B", 0x100000 }, 
+	{ 0x04, 0xd5, "Fujitsu MBM29F080A", 0x100000 }, 
+	{ 0xad, 0xd5, "Hynix HY29F080", 0x100000 },
+	{ 0x20, 0xf1, "ST M29F080A", 0x100000 },
+	{ 0x89, 0xa6, "Sharp LHF08CH1",0x100000 },
+	{ 0xda, 0x8c, "Winbond W49F020",0x40000 },
+
 	{ 0, 0, "", 0 } // terminator
 };
 
@@ -201,98 +205,99 @@ int main(int argc, char * argv[])
 		printf("Reading /etc/raincoat.conf... ");
 
 		fileRead = open("/etc/raincoat.conf", O_RDONLY);
-		if(fileRead<=0) {
-			printf("unable to open file\n");
-			return 1;
-		}
+		if(fileRead>0) {
 
-		fstat(fileRead, &statFile);
-		
-		if(fVerbose) printf("\n");
+			fstat(fileRead, &statFile);
 
-		{
-			KNOWN_FLASH_TYPE *pkft=&aknownflashtype[0];
-			BYTE * pbFile = (BYTE *)malloc(statFile.st_size+1);
-			char * sz=(char *)pbFile;
-			int nCountMaximumFlashTypes=(sizeof(aknownflashtype)/sizeof(KNOWN_FLASH_TYPE))-1;
-			int nCountSeen=0;
+			if(fVerbose) printf("\n");
 
-			if(pbFile==NULL) { printf("unable to allocate %u bytes of memory\n", (unsigned int)statFile.st_size); return 1; }
-			if(read(fileRead, &pbFile[0], statFile.st_size)<statFile.st_size) {
-				printf("Failed to read full file\n");
-				return 1;
-			}
-			pbFile[statFile.st_size]='\0';
-			close(fileRead);
+			{
+				KNOWN_FLASH_TYPE *pkft=&aknownflashtype[0];
+				BYTE * pbFile = (BYTE *)malloc(statFile.st_size+1);
+				char * sz=(char *)pbFile;
+				int nCountMaximumFlashTypes=(sizeof(aknownflashtype)/sizeof(KNOWN_FLASH_TYPE))-1;
+				int nCountSeen=0;
 
-			while((*sz) && (nCountMaximumFlashTypes)) {
-				if((strncmp(sz, "flash", 5)==0) || (strncmp(sz, "Flash", 5)==0) ) { // candidate
-					sz+=5;
-					while((*sz) && (isspace(*sz))) sz++;
-					if(*sz=='=') {
-						while((*sz) && (*sz!='x')) sz++;
-						if(*sz) {
-							int n;
-							char *szHex;
-							sz++;
-							szHex=sz;
-							n=9;
-							while((n--)&&(*sz!=',')) sz++;
-							if(n>=0) {
-								sscanf(szHex, "%x", &n);
-								pkft->m_bManufacturerId=(BYTE)(n>>8);
-								pkft->m_bDeviceId=(BYTE)n;
-								while((*sz) && (*sz!='\"')) sz++;
-								n=sizeof(pkft->m_szFlashDescription)-1;
-								if(*sz) {
-									int nPos=0;
-									sz++;
-									while((n--) && (*sz) && (*sz!='\"')) {
-										pkft->m_szFlashDescription[nPos++]=*sz++;
-									}
-									pkft->m_szFlashDescription[nPos++]='\0';
+				if(pbFile==NULL) { printf("unable to allocate %u bytes of memory\n", (unsigned int)statFile.st_size); return 1; }
+				if(read(fileRead, &pbFile[0], statFile.st_size)<statFile.st_size) {
+					printf("Failed to read full file\n");
+					return 1;
+				}
+				pbFile[statFile.st_size]='\0';
+				close(fileRead);
+
+				while((*sz) && (nCountMaximumFlashTypes)) {
+					if((strncmp(sz, "flash", 5)==0) || (strncmp(sz, "Flash", 5)==0) ) { // candidate
+						sz+=5;
+						while((*sz) && (isspace(*sz))) sz++;
+						if(*sz=='=') {
+							while((*sz) && (*sz!='x')) sz++;
+							if(*sz) {
+								int n;
+								char *szHex;
+								sz++;
+								szHex=sz;
+								n=9;
+								while((n--)&&(*sz!=',')) sz++;
+								if(n>=0) {
+									sscanf(szHex, "%x", &n);
+									pkft->m_bManufacturerId=(BYTE)(n>>8);
+									pkft->m_bDeviceId=(BYTE)n;
+									while((*sz) && (*sz!='\"')) sz++;
+									n=sizeof(pkft->m_szFlashDescription)-1;
 									if(*sz) {
-										while((*sz) && (*sz!='x')) sz++;
+										int nPos=0;
+										sz++;
+										while((n--) && (*sz) && (*sz!='\"')) {
+											pkft->m_szFlashDescription[nPos++]=*sz++;
+										}
+										pkft->m_szFlashDescription[nPos++]='\0';
 										if(*sz) {
-											sz++;
-											szHex=sz;
-											n=9;
-											while((n--)&&(!isspace(*sz)) ) sz++;
-											if(n>=0) {
-												sscanf(szHex, "%lx", &pkft->m_dwLengthInBytes);
+											while((*sz) && (*sz!='x')) sz++;
+											if(*sz) {
+												sz++;
+												szHex=sz;
+												n=9;
+												while((n--)&&(!isspace(*sz)) ) sz++;
+												if(n>=0) {
+													sscanf(szHex, "%lx", &pkft->m_dwLengthInBytes);
 
-												if(fVerbose) printf("  0x%02X, 0x%02X, '%s', %08lX\n",
-													pkft->m_bManufacturerId,
-													pkft->m_bDeviceId,
-													pkft->m_szFlashDescription,
-													pkft->m_dwLengthInBytes
-												);
+													if(fVerbose) printf("  0x%02X, 0x%02X, '%s', %08lX\n",
+														pkft->m_bManufacturerId,
+														pkft->m_bDeviceId,
+														pkft->m_szFlashDescription,
+														pkft->m_dwLengthInBytes
+													);
 
-												pkft++; nCountSeen++;
-												if((--nCountMaximumFlashTypes)==0) { //
-													printf("  (note, raincoat only supports %d flash types, rest ignored)\n", (sizeof(aknownflashtype)/sizeof(KNOWN_FLASH_TYPE))-1);
+													pkft++; nCountSeen++;
+													if((--nCountMaximumFlashTypes)==0) { //
+														printf("  (note, raincoat only supports %d flash types, rest ignored)\n", (sizeof(aknownflashtype)/sizeof(KNOWN_FLASH_TYPE))-1);
+													}
 												}
 											}
 										}
 									}
 								}
 							}
+
 						}
 
 					}
-
+					while((*sz) && (*sz!='\n') && (*sz!='\r')) sz++;
+					while((*sz) && ((*sz=='\n') || (*sz=='\r'))) sz++;
 				}
-				while((*sz) && (*sz!='\n') && (*sz!='\r')) sz++;
-				while((*sz) && ((*sz=='\n') || (*sz=='\r'))) sz++;
+
+				free(pbFile);
+
+				printf("%d flash types read\n", nCountSeen);
+
+						// terminating entry is all zeros
+
+				memset(pkft, 0, sizeof(KNOWN_FLASH_TYPE));
 			}
-
-			free(pbFile);
-
-			printf("%d flash types read\n", nCountSeen);
-					
-					// terminating entry is all zeros
-
-			memset(pkft, 0, sizeof(KNOWN_FLASH_TYPE));
+			close(fileRead);
+		} else {
+			printf("(unable to open /etc/raincoat.conf, using default list)\n");
 		}
 	}
 

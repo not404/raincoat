@@ -1,33 +1,50 @@
-raincoat v0.2 2003-02-09
+raincoat v0.4 2003-03-12
 andy@warmcat.com
 http://xbox-linux.sf.net
 
 BRIEFLY
 
 Raincoat is a small Linux app which knows how to reflash your Xbox.
-At the moment it has been tested with the SST49LF020 used in Cheapmod
-and Xodus/Matrix mods and the ST29F080A on the Xbox Motherboard.
+Here is the list of chips it supports:
 
-Sharp TSOP LHF08CH1/28F008 is also now supported, and has been
-confirmed working thanks to Daniel Jonsson.  NOTE that for the Sharp
-chip you must link TSOP.p11 to +5V.  A testpad for TSOP pin11 can be
-found on the reverse of the PCB, see NC11 on Bunnie's diagram here:
+  SST49LF020            256KByte  Cheapmod, Xodus, OzXchip...
+  Am29F080B            1024KByte  v1.0/v1.1 Motherboard
+  Fujitsu MBM29F080A   1024KByte  v1.0/v1.1 Motherboard
+  Hynix HY29F080       1024KByte  v1.0/v1.1 Motherboard
+  ST M29F080A          1024KByte  v1.0/v1.1 Motherboard
+  Sharp LHF08CH1       1024KByte  v1.0/v1.1 Motherboard  [1]
+  Winbond W49F020       256KByte  v1.2 Motherboard [2]
+
+[1] Sharp TSOP LHF08CH1/28F008 confirmed working thanks to Daniel 
+Jonsson.  NOTE that for the Sharp chip you must link TSOP.p11 to 
++5V.  A testpad for TSOP pin11 can be found on the reverse of the 
+PCB, see NC11 on Bunnie's diagram here:
 
  http://www.xenatera.com/bunnie/proj/anatak/images/rompinouts.jpg
 
+[2] Thanks to WaferJ from xboxhacker for testing.  W49F020 has no 
+block erase, only chip erase.  Chip erase is only allowed by raincoat 
+if the two kinds of block erase failed to work and you are writing the 
+whole 256KBytes starting from the beginning, as a safety feature.
+Note that on the v1.2 motherboard the bridge points for nWE and nOE
+on the TSOP are in a different place than the v1.0 and v1.1.
+
 INSTALLING
+
+Distributions of raincoat now include a staticly-linked executable
+called raincoat.  This is ready to run.
 
 If you got raincoat as a tar, untar it into your home directory on
 your Xbox like this:
 
-# tar xzf raincoat-0.2.tar.gz
+# tar xzf raincoat-0.4.tar.gz
 
 This will create a raincoat directory.  (You will already have this
 directory is you got it from CVS.)  Enter the directory
 
 # cd raincoat
 
-Then:
+To remake raincoat, you do the following:
 
 # make
 # su <give root password, xbox by default>
@@ -50,6 +67,9 @@ Flash = 0xbf61,"SST SST49LF020",0x40000
 The first number is the manufacturer/device ID for this kind of
 flash.  The string is the user-presentable name of the flash
 chip.  lastly is the size of the flash device in bytes.
+
+If /etc/raincoat.conf is not available, raincoat uses a built-in list
+of known flash devices which it supports.
 
 
 The help that raincoat gives with no arguments is self-
