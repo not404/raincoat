@@ -101,6 +101,7 @@ int main(int argc, char * argv[])
 	bool fVerbose=false;
 	char szFilepathProgram[256]="";
 	char szFilepathReadback[256]="";
+	int fileMem;
 
 		// construct the flash object
 
@@ -116,7 +117,7 @@ int main(int argc, char * argv[])
 
 		// map the BIOS region 0xff000000 - 0xffffffff so that we can touch it
 
-	int fileMem = open("/dev/mem", O_RDWR);
+	fileMem = open("/dev/mem", O_RDWR);
 	if(!fileMem) { printf("Must be run as root\n"); return 1; }
 	objectflash.m_pbMemoryMappedStartAddress = (BYTE *)mmap(0, 0x1000000, PROT_READ | PROT_WRITE, MAP_SHARED, fileMem , 0xff000000);
 	if(objectflash.m_pbMemoryMappedStartAddress==NULL) { printf("Unable to map register memory\n"); return 1; }
@@ -360,10 +361,11 @@ int main(int argc, char * argv[])
 
 
 	if(fReadback) { // perform readback
+		int fileDump;
 
 		printf("Reading back to %s...\n", szFilepathReadback);
 
-		int fileDump = open(szFilepathReadback, O_CREAT | O_TRUNC | O_RDWR, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH);
+		fileDump = open(szFilepathReadback, O_CREAT | O_TRUNC | O_RDWR, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH);
 		write(fileDump, (BYTE *)&objectflash.m_pbMemoryMappedStartAddress[0], objectflash.m_dwLengthInBytes);
 		close(fileDump);
 	}
