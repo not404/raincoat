@@ -130,6 +130,9 @@ int main(int argc, char * argv[])
 	char szFilepathProgram[256]="";
 	char szFilepathReadback[256]="";
 	int fileMem;
+	char szConfigFile[1024];
+
+	strcpy(szConfigFile,"/etc/raincoat.conf");
 
 		// construct the flash object
 
@@ -197,6 +200,11 @@ int main(int argc, char * argv[])
 				fVerbose=true;
 			}
 
+			if(strcmp(argv[n], "-c")==0) { // verbose
+				n++;
+				strcpy(szConfigFile,argv[n]);
+			}
+
 			n++;
 		}
 	}
@@ -206,9 +214,9 @@ int main(int argc, char * argv[])
 	{
 		int fileRead;
 		struct stat statFile;
-		printf("Reading /etc/raincoat.conf... ");
+		printf("Reading %s... ",szConfigFile);
 
-		fileRead = open("/etc/raincoat.conf", O_RDONLY);
+		fileRead = open(szConfigFile, O_RDONLY);
 		if(fileRead>0) {
 
 			fstat(fileRead, &statFile);
@@ -301,7 +309,7 @@ int main(int argc, char * argv[])
 			}
 			close(fileRead);
 		} else {
-			printf("(unable to open /etc/raincoat.conf, using default list)\n");
+			printf("(unable to open %s, using default list)\n",szConfigFile);
 		}
 	}
 
@@ -312,9 +320,12 @@ int main(int argc, char * argv[])
 		if(BootFlashGetDescriptor(&objectflash, &aknownflashtype[0])) {
 			printf("\nDETECTED: %s\n", objectflash.m_szFlashDescription);
 		} else {
-			printf("\nUNKNOWN DEVICE %s\n", objectflash.m_szFlashDescription);
-			printf("Try adding the device ID to /etc/raincoat.conf\n");
-			return(1);
+			if(!fReadback) {
+				printf("\nUNKNOWN DEVICE %s\n", objectflash.m_szFlashDescription);
+				printf("Try adding the device ID to /etc/raincoat.conf\n");
+				
+				return(1);
+			}
 		}
 
 		if(objectflash.m_dwStartOffset >= objectflash.m_dwLengthInBytes) {
@@ -329,6 +340,7 @@ int main(int argc, char * argv[])
 			" -r filetodumpto  Read whole flash back into file\n"
 			" -a hexoffset     Optional start offset in flash, default 0\n"
 			" -v               Verbose informational messages\n\n"
+			" -c configfile    Use a userdefined config File\n" 
 			"Example:  raincoat -p cromwell.bin\n\n"
 			"Please note, -p will reprogram your BIOS flash\n"
 			"  Please do not use if you don't understand what that\n"
@@ -406,7 +418,8 @@ int main(int argc, char * argv[])
 		printf("Reading back to %s...\n", szFilepathReadback);
 
 		fileDump = open(szFilepathReadback, O_CREAT | O_TRUNC | O_RDWR, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH);
-		write(fileDump, (BYTE *)&objectflash.m_pbMemoryMappedStartAddress[0], objectflash.m_dwLengthInBytes);
+		if(objectflash.m_dwLengthInBytes == 0) objectflash.m_dwLengthInBytes = 0x100000;
+		write(fileDump, (BYTE *)objectflash.m_pbMemoryMappedStartAddress, objectflash.m_dwLengthInBytes);
 		close(fileDump);
 	}
 

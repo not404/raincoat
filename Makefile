@@ -9,5 +9,5 @@ clean:
 	rm -f *~
 	
 install:
-	cp raincoat.conf /etc/
-	cp raincoat /usr/bin/
+	cp raincoat.conf $(DESTDIR)/etc/
+	cp raincoat $(DESTDIR)/usr/bin/
