@@ -9,9 +9,11 @@
  ***************************************************************************/
 
  /*
-  2003-01-27  andy@warmcat.com  Cosmetic edits, using character bars for progress
-                                Support for 28xxx flash
-  2003-01-06  andy@warmcat.com  Created
+  2005-02-09  gentoox@shallax.com  + Added a load of flash types
+  2003-01-27  andy@warmcat.com     + Cosmetic edits, using character bars for 
+											    progress
+                                   + Support for 28xxx flash
+  2003-01-06  andy@warmcat.com     + Created
  */
 
 #include <stdio.h>
@@ -32,27 +34,14 @@
 
 #include "BootFlash.h"
 
-#define RAINCOAT_VERSION "0.5"
+#define RAINCOAT_VERSION "0.6"
 
 bool FlashingCallback(void * pvoidObjectFlash, ENUM_EVENTS ee, DWORD dwPos, DWORD dwExtent);
 
 OBJECT_FLASH objectflash;
 
-KNOWN_FLASH_TYPE aknownflashtype[32] = { // max 31 flash types known
-	{ 0x01, 0xa4, "AMD - Am29F040B",0x80000 },
-	{ 0x01, 0xd5, "AMD - Am29F080B",0x100000 },
-	{ 0x01, 0xda, "AMD - Am29LV800B",0x100000 },
-	{ 0x04, 0xd5, "Fujitsu - MBM29F080A",0x100000 },
-	{ 0xad, 0xb0, "Hynix - HY29F002TT-90",0x40000 },
-	{ 0xad, 0xd5, "Hynix - HY29F080",0x100000 },
-	{ 0xc2, 0x36, "Macronix - MX29F022NTPC",0x40000 },
-	{ 0x20, 0xb0, "ST - M29F002BT",0x40000 },
-	{ 0x20, 0xf1, "ST - M29F080A",0x100000 },
-	{ 0xbf, 0x61, "SST SST49LF020",0x40000 },
-	{ 0x89, 0xa6, "Sharp LHF08CH1",0x100000 },
-	{ 0xda, 0x8c, "Winbond W49F020",0x40000 },
-	{ 0xda, 0x0b, "Winbond - W49F002U",0x40000 },
-	{ 0, 0, "", 0 } // terminator
+KNOWN_FLASH_TYPE aknownflashtype[1024] = { // Max of 1024 flash types.
+#include "flashtypes.h"
 };
 
 
