@@ -1,24 +1,25 @@
-raincoat v0.5 2003-03-14
+raincoat v0.6 2005-02-09
 andy@warmcat.com
 http://xbox-linux.sf.net
 
 BRIEFLY
 
 Raincoat is a small Linux app which knows how to reflash your Xbox.
-Here is the list of chips it supports:
+Here is the list of chips it supports (note this list is deprecated, 
+run ./parseTypes.sh for a complete list):
 
-  SST49LF020            	256KByte   Cheapmod, Xodus, OzXchip...
-  Am29F080B            		1024KByte  v1.0/v1.1 Motherboard
-  Fujitsu MBM29F080A   		1024KByte  v1.0/v1.1 Motherboard
-  Hynix HY29F080       		1024KByte  v1.0/v1.1 Motherboard
-  ST M29F080A          		1024KByte  v1.0/v1.1 Motherboard
-  Sharp LHF08CH1       		1024KByte  v1.0/v1.1 Motherboard  [1]
-  Winbond W49F020       	256KByte   v1.2 Motherboard [2]
-  ST M29f002BT			256KByte   v1.2/v1.3 [3]
-  AMD - Am29F040B		512KByte   Found in some 29wire mods
-  Winbond - W49F002U		256KByte   v1.2/v1.3[3]
+  SST49LF020					256KByte   Cheapmod, Xodus, OzXchip...
+  Am29F080B						1024KByte  v1.0/v1.1 Motherboard
+  Fujitsu MBM29F080A			1024KByte  v1.0/v1.1 Motherboard
+  Hynix HY29F080				1024KByte  v1.0/v1.1 Motherboard
+  ST M29F080A					1024KByte  v1.0/v1.1 Motherboard
+  Sharp LHF08CH1				1024KByte  v1.0/v1.1 Motherboard  [1]
+  Winbond W49F020				256KByte   v1.2 Motherboard [2]
+  ST M29f002BT					256KByte   v1.2/v1.3 [3]
+  AMD - Am29F040B				512KByte   Found in some 29wire mods
+  Winbond - W49F002U			256KByte   v1.2/v1.3[3]
   MACRONIX - MX29F022NTPC	256KByte   v1.2/v1.3 [3]
-  AMD - Am29LV800B		1024KByte  Chaemeleon [4]
+  AMD - Am29LV800B			1024KByte  Chaemeleon [4]
 
 [1] Sharp TSOP LHF08CH1/28F008 confirmed working thanks to Daniel 
 Jonsson.  NOTE that for the Sharp chip you must link TSOP.p11 to 
