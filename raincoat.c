@@ -31,7 +31,7 @@
 
 #include "BootFlash.h"
 
-#define RAINCOAT_VERSION "0.4"
+#define RAINCOAT_VERSION "0.5"
 
 bool FlashingCallback(void * pvoidObjectFlash, ENUM_EVENTS ee, DWORD dwPos, DWORD dwExtent);
 

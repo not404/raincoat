@@ -1,4 +1,4 @@
-raincoat v0.4 2003-03-12
+raincoat v0.5 2003-03-14
 andy@warmcat.com
 http://xbox-linux.sf.net
 
@@ -29,6 +29,8 @@ whole 256KBytes starting from the beginning, as a safety feature.
 Note that on the v1.2 motherboard the bridge points for nWE and nOE
 on the TSOP are in a different place than the v1.0 and v1.1.
 
+''Everyone knows all flashers prefer to use a raincoat.''
+
 INSTALLING
 
 Distributions of raincoat now include a staticly-linked executable
@@ -37,7 +39,7 @@ called raincoat.  This is ready to run.
 If you got raincoat as a tar, untar it into your home directory on
 your Xbox like this:
 
-# tar xzf raincoat-0.4.tar.gz
+# tar xzf raincoat-0.5.tar.gz
 
 This will create a raincoat directory.  (You will already have this
 directory is you got it from CVS.)  Enter the directory
@@ -76,7 +78,7 @@ The help that raincoat gives with no arguments is self-
 explanitory for the rest of the functionality:
 
 
-raincoat Flasher  0.1  Jan  6 2003  andy@warmcat.com  http://xbox-linux.sf.net
+raincoat Flasher  0.5  Apr  14 2003  andy@warmcat.com  http://xbox-linux.sf.net
 Reading /etc/raincoat.conf
 
 Detected: SST SST49LF020 (256K)

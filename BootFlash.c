@@ -8,6 +8,7 @@
  ***************************************************************************/
 
  /*
+  2003-04-14  andy@warmcat.com  Fixed W49F020 erase, confirmed working
   2003-01-27  andy@warmcat.com  Fixed and verified ST29F080A programming
                                 Different block erase command from SST part
                                 Also seemed to require explicit chip reset action
@@ -271,6 +272,9 @@ bool BootFlashEraseMinimalRegion( OBJECT_FLASH *pof )
 					(pof->m_dwStartOffset==0) && // reprogramming whole chip .. starting from start
 					(pof->m_dwLengthUsedArea == pof->m_dwLengthInBytes)  // and doing the whole length of the chip
 				) { // <3 means never entered busy mode - block erase code 0x30 not supported
+					#if 1
+					printf("Trying to erase whole chip\n");
+					#endif
 					pof->m_pbMemoryMappedStartAddress[0x5555]=0xaa;
 					pof->m_pbMemoryMappedStartAddress[0x2aaa]=0x55;
 					pof->m_pbMemoryMappedStartAddress[0x5555]=0xf0;
@@ -281,7 +285,7 @@ bool BootFlashEraseMinimalRegion( OBJECT_FLASH *pof )
 
 					pof->m_pbMemoryMappedStartAddress[0x5555]=0xaa;
 					pof->m_pbMemoryMappedStartAddress[0x2aaa]=0x55;
-					pof->m_pbMemoryMappedStartAddress[dw]=0x10; // chip erase ONLY available on W49F020
+					pof->m_pbMemoryMappedStartAddress[0x5555]=0x10; // chip erase ONLY available on W49F020
 
 					b=pof->m_pbMemoryMappedStartAddress[dw];
 					dwCountTries=0;
