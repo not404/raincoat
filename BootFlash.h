@@ -35,15 +35,17 @@ typedef bool (*CALLBACK_FLASH)(void * pvoidObjectFlash, ENUM_EVENTS ee, DWORD dw
 
  typedef struct {
 
- 	volatile BYTE * m_pbMemoryMappedStartAddress; // fill on entry
+ 	volatile BYTE * volatile m_pbMemoryMappedStartAddress; // fill on entry
 	BYTE m_bManufacturerId;
 	BYTE m_bDeviceId;
- 	char m_szFlashDescription[256];
+	char m_szFlashDescription[256];
+ 	char m_szAdditionalErrorInfo[256];
 	DWORD m_dwLengthInBytes;
 	DWORD m_dwStartOffset;
 	DWORD m_dwLengthUsedArea;
 	CALLBACK_FLASH m_pcallbackFlash;
 	bool m_fDetectedUsing28xxxConventions;
+	bool m_fIsBelievedCapableOfWriteAndErase;
 
  } OBJECT_FLASH;
 

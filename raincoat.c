@@ -31,7 +31,7 @@
 
 #include "BootFlash.h"
 
-#define RAINCOAT_VERSION "0.2"
+#define RAINCOAT_VERSION "0.3"
 
 bool FlashingCallback(void * pvoidObjectFlash, ENUM_EVENTS ee, DWORD dwPos, DWORD dwExtent);
 
@@ -340,6 +340,11 @@ int main(int argc, char * argv[])
 
 		printf("Programming with %s...", szFilepathProgram);
 
+		if(!objectflash.m_fIsBelievedCapableOfWriteAndErase) {
+			printf("\nFlash is locked, unable to write\n");
+			return 1;
+		}
+
 		fileRead = open(szFilepathProgram, O_RDONLY);
 		if(fileRead<=0) {
 			printf("unable to open file\n");
@@ -366,9 +371,11 @@ int main(int argc, char * argv[])
 			}
 
 			if(BootFlashEraseMinimalRegion(&objectflash)) {
-				BootFlashProgram(&objectflash, pbFile);
+				if(!BootFlashProgram(&objectflash, pbFile)) {
+					printf("   Programming Error: %s\n", objectflash.m_szAdditionalErrorInfo);
+				}
 			} else {
-				printf("   Could your chip be write-protected?\n");
+				printf("   Error: %s\n   Could your chip be write-protected?\n", objectflash.m_szAdditionalErrorInfo);
 				if(objectflash.m_bManufacturerId==0xbf) {
 					printf(
 						"   Matrix/Xodus users need their switches both off\n"

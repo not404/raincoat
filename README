@@ -1,4 +1,4 @@
-raincoat v0.2 2003-01-27
+raincoat v0.2 2003-02-09
 andy@warmcat.com
 http://xbox-linux.sf.net
 
@@ -8,8 +8,12 @@ Raincoat is a small Linux app which knows how to reflash your Xbox.
 At the moment it has been tested with the SST49LF020 used in Cheapmod
 and Xodus/Matrix mods and the ST29F080A on the Xbox Motherboard.
 
-The newer Sharp TSOP LHF08CH1 is also supported but I am unable to
-test it due to not having such a box.
+Sharp TSOP LHF08CH1/28F008 is also now supported, and has been
+confirmed working thanks to Daniel Jonsson.  NOTE that for the Sharp
+chip you must link TSOP.p11 to +5V.  A testpad for TSOP pin11 can be
+found on the reverse of the PCB, see NC11 on Bunnie's diagram here:
+
+ http://www.xenatera.com/bunnie/proj/anatak/images/rompinouts.jpg
 
 INSTALLING
 
