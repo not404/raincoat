@@ -1,4 +1,4 @@
-raincoat v0.1 2003-01-06
+raincoat v0.2 2003-01-27
 andy@warmcat.com
 http://xbox-linux.sf.net
 
@@ -6,16 +6,17 @@ BRIEFLY
 
 Raincoat is a small Linux app which knows how to reflash your Xbox.
 At the moment it has been tested with the SST49LF020 used in Cheapmod
-and Xodus/Matrix mods.  It also knows how to flash the various 1MByte
-TSOP flashes found on the Xbox motherboard, this has not been tested
-but is expected to work, as they all use the same flash command set.
+and Xodus/Matrix mods and the ST29F080A on the Xbox Motherboard.
+
+The newer Sharp TSOP LHF08CH1 is also supported but I am unable to
+test it due to not having such a box.
 
 INSTALLING
 
 If you got raincoat as a tar, untar it into your home directory on
 your Xbox like this:
 
-# tar xzf raincoat-0.1.tar.gz
+# tar xzf raincoat-0.2.tar.gz
 
 This will create a raincoat directory.  (You will already have this
 directory is you got it from CVS.)  Enter the directory
@@ -46,6 +47,7 @@ The first number is the manufacturer/device ID for this kind of
 flash.  The string is the user-presentable name of the flash
 chip.  lastly is the size of the flash device in bytes.
 
+
 The help that raincoat gives with no arguments is self-
 explanitory for the rest of the functionality:
 
@@ -69,3 +71,21 @@ Please note, -p will reprogram your BIOS flash
   means, there is no simple undo for this if you
   programmed the wrong thing.
   -r is always safe to use, as is running with no args
+
+
+
+Something that is not obvious is that raincoat only erases the
+minimum possible footprint in the flash necessary to reprogram
+the area used by the file being programmed.
+
+Most flashes offer 64KByte or less block erase capability, and
+it is this that is used in raincoat.  Together with the -a switch
+this allows multiple files to be programmed into different
+quadrants of a large flash device completely independently.  For
+example:
+
+raincoat -a 80000 -p myfile.bin
+
+will reprogram the third quarter of a 1MByte flash only, assuming
+myfile.bin is 256KBytes.  The other four quarters will be
+completely untouched.

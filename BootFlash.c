@@ -7,7 +7,11 @@
  *                                                                         *
  ***************************************************************************/
 
- /* 2003-01-06  andy@warmcat.com  Created
+ /* 
+  2003-01-27  andy@warmcat.com  Fixed and verified ST29F080A programming
+                                Different block erase command from SST part
+                                Also seemed to require explicit chip reset action
+  2003-01-06  andy@warmcat.com  Created
  */
 
 #include "boot.h"
@@ -20,23 +24,68 @@
 bool BootFlashGetDescriptor( OBJECT_FLASH *pof, KNOWN_FLASH_TYPE * pkft )
 {
 	bool fSeen=false;
+	BYTE baNormalModeFirstTwoBytes[2];
+	int nTries=0;
 
-		// no ISRs should touch flash while we do the stuff
-	__asm__ __volatile__ ( "pushf ; cli ");
+	baNormalModeFirstTwoBytes[0]=pof->m_pbMemoryMappedStartAddress[0];
+	baNormalModeFirstTwoBytes[1]=pof->m_pbMemoryMappedStartAddress[1];
 
-		// read flash device ID
+	while(nTries++ <2) { // first we try 29xxx method, then 28xxx if that failed
 
-	pof->m_pbMemoryMappedStartAddress[0x5555]=0xaa;
-	pof->m_pbMemoryMappedStartAddress[0x2aaa]=0x55;
-	pof->m_pbMemoryMappedStartAddress[0x5555]=0x90;
-	pof->m_bManufacturerId=pof->m_pbMemoryMappedStartAddress[0];
-	pof->m_pbMemoryMappedStartAddress[0x5555]=0xaa;
-	pof->m_pbMemoryMappedStartAddress[0x2aaa]=0x55;
-	pof->m_pbMemoryMappedStartAddress[0x5555]=0x90;
-	pof->m_bDeviceId=pof->m_pbMemoryMappedStartAddress[1];
-	pof->m_pbMemoryMappedStartAddress[0x5555]=0xf0;
+			// no ISRs should touch flash while we do the stuff
+		__asm__ __volatile__ ( "pushf ; cli ");
+
+		
+		if(nTries==1) { // 29xxx protocol
+		
+			// make sure the flash state machine is reset
+
+			pof->m_pbMemoryMappedStartAddress[0x5555]=0xf0;
+			pof->m_pbMemoryMappedStartAddress[0x5555]=0xaa;
+			pof->m_pbMemoryMappedStartAddress[0x2aaa]=0x55;
+			pof->m_pbMemoryMappedStartAddress[0x5555]=0xf0;
+
+				// read flash ID
+
+			pof->m_pbMemoryMappedStartAddress[0x5555]=0xaa;
+			pof->m_pbMemoryMappedStartAddress[0x2aaa]=0x55;
+			pof->m_pbMemoryMappedStartAddress[0x5555]=0x90;
+
+			pof->m_bManufacturerId=pof->m_pbMemoryMappedStartAddress[0];
+			pof->m_bDeviceId=pof->m_pbMemoryMappedStartAddress[1];
+
+			pof->m_pbMemoryMappedStartAddress[0x5555]=0xf0;
+
+		} else { // 28xxx protocol, seen on Sharp
+
+				// make sure the flash state machine is reset
+
+			pof->m_pbMemoryMappedStartAddress[0x5555]=0xff;
+				
+				// read flash ID
+
+			pof->m_pbMemoryMappedStartAddress[0x5555]=0x90;
+			pof->m_bManufacturerId=pof->m_pbMemoryMappedStartAddress[0];
+
+			pof->m_pbMemoryMappedStartAddress[0x5555]=0x90;
+			pof->m_bDeviceId=pof->m_pbMemoryMappedStartAddress[1];
+
+			pof->m_pbMemoryMappedStartAddress[0x5555]=0xff;
+			
+			pof->m_fDetectedUsing28xxxConventions=true; // mark the flash object as representing a 29xxx job
+
+		}
 
 		__asm__ __volatile__ ( "popf ");
+
+
+		if(
+			(baNormalModeFirstTwoBytes[0]!=pof->m_bManufacturerId) ||
+			(baNormalModeFirstTwoBytes[1]!=pof->m_pbMemoryMappedStartAddress[1])
+		) nTries=2;  // don't try any more if we got some result the first time
+
+	} // while
+
 
 		// interpret device ID info
 
@@ -59,7 +108,14 @@ bool BootFlashGetDescriptor( OBJECT_FLASH *pof, KNOWN_FLASH_TYPE * pkft )
 	}
 
 	if(!fSeen) {
-		sprintf(pof->m_szFlashDescription, "manf=0x%02X, dev=0x%02X", pof->m_bManufacturerId, pof->m_bDeviceId);
+		if(
+			(baNormalModeFirstTwoBytes[0]==pof->m_bManufacturerId) &&
+			(baNormalModeFirstTwoBytes[1]==pof->m_pbMemoryMappedStartAddress[1])
+		) { // we didn't get anything worth reporting
+			sprintf(pof->m_szFlashDescription, "Read Only??? manf=0x%02X, dev=0x%02X", pof->m_bManufacturerId, pof->m_bDeviceId);
+		} else { // we got what is probably an unknown flash type
+			sprintf(pof->m_szFlashDescription, "manf=0x%02X, dev=0x%02X", pof->m_bManufacturerId, pof->m_bDeviceId);
+		}
 	}
 
 	return fSeen;
@@ -95,20 +151,48 @@ bool BootFlashEraseMinimalRegion( OBJECT_FLASH *pof )
 
 
 				// no ISRs should touch flash while we do the stuff
+			
 			__asm__ __volatile__ ( "pushf ; cli ");
 
-			pof->m_pbMemoryMappedStartAddress[0x5555]=0xaa;
-			pof->m_pbMemoryMappedStartAddress[0x2aaa]=0x55;
-			pof->m_pbMemoryMappedStartAddress[0x5555]=0x80;
 
-			pof->m_pbMemoryMappedStartAddress[0x5555]=0xaa;
-			pof->m_pbMemoryMappedStartAddress[0x2aaa]=0x55;
-			pof->m_pbMemoryMappedStartAddress[dw]=0x50; // erase the block containing the non 0xff guy
+			if(pof->m_fDetectedUsing28xxxConventions) {
+				pof->m_pbMemoryMappedStartAddress[0x5555]=0x20;
+				pof->m_pbMemoryMappedStartAddress[dw]=0xd0; // erase the block containing the non 0xff guy
+			} else {
+				pof->m_pbMemoryMappedStartAddress[0x5555]=0xaa;
+				pof->m_pbMemoryMappedStartAddress[0x2aaa]=0x55;
+				pof->m_pbMemoryMappedStartAddress[0x5555]=0x80;
+
+				pof->m_pbMemoryMappedStartAddress[0x5555]=0xaa;
+				pof->m_pbMemoryMappedStartAddress[0x2aaa]=0x55;
+				pof->m_pbMemoryMappedStartAddress[dw]=0x50; // erase the block containing the non 0xff guy
+			}
 
 				// wait out erase period
 			{
 				BYTE b=pof->m_pbMemoryMappedStartAddress[dw];  // waits until b6 is no longer toggling on each read
-				while((pof->m_pbMemoryMappedStartAddress[dw]&0x40)!=(b&0x40)) b^=0x40;
+				DWORD dwCountTries=0;
+				while((pof->m_pbMemoryMappedStartAddress[dw]&0x40)!=(b&0x40)) {
+					dwCountTries++; b^=0x40;
+				}
+				if((dwCountTries<3) && (!pof->m_fDetectedUsing28xxxConventions)) { // this can't be right - maybe this flash uses different block erase code
+					pof->m_pbMemoryMappedStartAddress[0x5555]=0xaa;
+					pof->m_pbMemoryMappedStartAddress[0x2aaa]=0x55;
+					pof->m_pbMemoryMappedStartAddress[0x5555]=0xf0;
+
+					pof->m_pbMemoryMappedStartAddress[0x5555]=0xaa;
+					pof->m_pbMemoryMappedStartAddress[0x2aaa]=0x55;
+					pof->m_pbMemoryMappedStartAddress[0x5555]=0x80;
+
+					pof->m_pbMemoryMappedStartAddress[0x5555]=0xaa;
+					pof->m_pbMemoryMappedStartAddress[0x2aaa]=0x55;
+					pof->m_pbMemoryMappedStartAddress[dw]=0x30; // erase the block containing the non 0xff guy
+
+					b=pof->m_pbMemoryMappedStartAddress[dw];
+					while((pof->m_pbMemoryMappedStartAddress[dw]&0x40)!=(b&0x40)) {
+						dwCountTries++; b^=0x40;
+					}
+				}
 			}
 
 			__asm__ __volatile__ ( "popf ");
@@ -161,10 +245,15 @@ bool BootFlashProgram( OBJECT_FLASH *pof, BYTE *pba )
 				// no ISRs should touch flash while we do the stuff
 			__asm__ __volatile__ ( "pushf ; cli ");
 
-			pof->m_pbMemoryMappedStartAddress[0x5555]=0xaa;
-			pof->m_pbMemoryMappedStartAddress[0x2aaa]=0x55;
-			pof->m_pbMemoryMappedStartAddress[0x5555]=0xa0;
-			pof->m_pbMemoryMappedStartAddress[dw]=pba[dwSrc]; // erase the block containing the non 0xff guy
+			if(pof->m_fDetectedUsing28xxxConventions) {
+				pof->m_pbMemoryMappedStartAddress[0x5555]=0x10;
+				pof->m_pbMemoryMappedStartAddress[dw]=pba[dwSrc]; // erase the block containing the non 0xff guy
+			} else {
+				pof->m_pbMemoryMappedStartAddress[0x5555]=0xaa;
+				pof->m_pbMemoryMappedStartAddress[0x2aaa]=0x55;
+				pof->m_pbMemoryMappedStartAddress[0x5555]=0xa0;
+				pof->m_pbMemoryMappedStartAddress[dw]=pba[dwSrc]; // erase the block containing the non 0xff guy
+			}
 
 				// wait out erase period
 			{

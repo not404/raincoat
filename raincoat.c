@@ -8,7 +8,10 @@
  *                                                                         *
  ***************************************************************************/
 
- /* 2003-01-06  andy@warmcat.com  Created
+ /*
+  2003-01-27  andy@warmcat.com  Cosmetic edits, using character bars for progress
+                                Support for 28xxx flash
+  2003-01-06  andy@warmcat.com  Created
  */
 
 #include <stdio.h>
@@ -28,7 +31,7 @@
 
 #include "BootFlash.h"
 
-#define RAINCOAT_VERSION "0.1"
+#define RAINCOAT_VERSION "0.2"
 
 bool FlashingCallback(void * pvoidObjectFlash, ENUM_EVENTS ee, DWORD dwPos, DWORD dwExtent);
 
@@ -46,6 +49,20 @@ KNOWN_FLASH_TYPE aknownflashtype[32] = { // max 31 flash types known
 };
 
 
+void Progress(int nPercent) {
+	int n=0;
+	printf("  %3d%% .:(", nPercent);
+	while(n++<((40 * nPercent)/100)) printf("*");
+	while(n++<40) printf(".");
+	printf("):.\r");
+}
+
+void ClearProgress(void) {
+	int n=0;
+	while(n++<54) printf(" ");
+	printf("\r");
+}
+
 bool FlashingCallback(void * pvoidof, ENUM_EVENTS ee, DWORD dwPos, DWORD dwExtent)
 {
 //	OBJECT_FLASH * pof=(OBJECT_FLASH *)pvoidof;
@@ -55,10 +72,11 @@ bool FlashingCallback(void * pvoidof, ENUM_EVENTS ee, DWORD dwPos, DWORD dwExten
 			printf(" Erasing...\n");
 			break;
 		case EE_ERASE_UPDATE:
-			printf("  %ld%%...    \r", (dwPos*100)/dwExtent);
+			Progress((dwPos*100)/dwExtent);
 			break;
 		case EE_ERASE_END:
-			printf("  Done      \n");
+			ClearProgress();
+			printf("  Done  \n");
 			break;
 		case EE_ERASE_ERROR:
 			printf("  ERASE ERROR AT +0x%lX...read 0x%02lX\n", dwPos, dwExtent&0xff);
@@ -67,9 +85,10 @@ bool FlashingCallback(void * pvoidof, ENUM_EVENTS ee, DWORD dwPos, DWORD dwExten
 			printf(" Programming...\n");
 			break;
 		case EE_PROGRAM_UPDATE:
-			printf("  %ld%%...    \r", (dwPos*100)/dwExtent);
+			Progress((dwPos*100)/dwExtent);
 			break;
 		case EE_PROGRAM_END:
+			ClearProgress();
 			printf("  Done      \n");
 			break;
 		case EE_PROGRAM_ERROR:
@@ -79,9 +98,10 @@ bool FlashingCallback(void * pvoidof, ENUM_EVENTS ee, DWORD dwPos, DWORD dwExten
 			printf(" Verifying...\n");
 			break;
 		case EE_VERIFY_UPDATE:
-			printf("  %ld%%...    \r", (dwPos*100)/dwExtent);
+			Progress((dwPos*100)/dwExtent);
 			break;
 		case EE_VERIFY_END:
+			ClearProgress();
 			printf("  Done      \n");
 			break;
 		case EE_VERIFY_ERROR:
@@ -111,6 +131,8 @@ int main(int argc, char * argv[])
 	objectflash.m_dwStartOffset=0;
 	objectflash.m_dwLengthUsedArea=0;
 	objectflash.m_pcallbackFlash=FlashingCallback;
+	objectflash.m_fDetectedUsing28xxxConventions=false;
+
 	strcpy(&objectflash.m_szFlashDescription[0], "Unknown");
 
 	printf("raincoat Flasher  "RAINCOAT_VERSION"  " __DATE__ "  andy@warmcat.com  http://xbox-linux.sf.net\n");
@@ -139,7 +161,7 @@ int main(int argc, char * argv[])
 				strncpy(szFilepathProgram, &argv[n][0], sizeof(szFilepathProgram)-1);
 				fProgram=true;
 			}
-			
+
 			if(strcmp(argv[n], "-r")==0) { // readback
 				n++;
 				if(n>=argc) {
@@ -185,6 +207,8 @@ int main(int argc, char * argv[])
 		}
 
 		fstat(fileRead, &statFile);
+		
+		if(fVerbose) printf("\n");
 
 		{
 			KNOWN_FLASH_TYPE *pkft=&aknownflashtype[0];

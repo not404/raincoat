@@ -43,6 +43,7 @@ typedef bool (*CALLBACK_FLASH)(void * pvoidObjectFlash, ENUM_EVENTS ee, DWORD dw
 	DWORD m_dwStartOffset;
 	DWORD m_dwLengthUsedArea;
 	CALLBACK_FLASH m_pcallbackFlash;
+	bool m_fDetectedUsing28xxxConventions;
 
  } OBJECT_FLASH;
 
