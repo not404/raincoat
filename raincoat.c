@@ -26,6 +26,7 @@
 #include <fcntl.h>
 #include <sys/io.h>
 #include <ctype.h>
+#include <signal.h>
 
 #include "boot.h"
 
@@ -130,6 +131,10 @@ int main(int argc, char * argv[])
 	int fileMem;
 	char szConfigFile[1024];
 
+	//For some reason (anyone?) we OCCASIONALLY get a SIGTRAP, which
+	//kills us, if we don't ignore it (or handle it).
+	signal(SIGTRAP, SIG_IGN);
+	
 	strcpy(szConfigFile,"/etc/raincoat.conf");
 
 		// construct the flash object
