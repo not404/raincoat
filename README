@@ -1,0 +1,71 @@
+raincoat v0.1 2003-01-06
+andy@warmcat.com
+http://xbox-linux.sf.net
+
+BRIEFLY
+
+Raincoat is a small Linux app which knows how to reflash your Xbox.
+At the moment it has been tested with the SST49LF020 used in Cheapmod
+and Xodus/Matrix mods.  It also knows how to flash the various 1MByte
+TSOP flashes found on the Xbox motherboard, this has not been tested
+but is expected to work, as they all use the same flash command set.
+
+INSTALLING
+
+If you got raincoat as a tar, untar it into your home directory on
+your Xbox like this:
+
+# tar xzf raincoat-0.1.tar.gz
+
+This will create a raincoat directory.  (You will already have this
+directory is you got it from CVS.)  Enter the directory
+
+# cd raincoat
+
+Then:
+
+# make
+# su <give root password, xbox by default>
+# make install
+
+Now you can use raincoat from any directory
+
+
+USING
+
+You have to be root to use raincoat.
+
+raincoat looks at a file /etc/raincoat.conf for details on
+what flashes it can support.  This file is in the same format
+as the EvoX flash definitions to minimize confusions.  Here is
+a sample line:
+
+Flash = 0xbf61,"SST SST49LF020",0x40000
+
+The first number is the manufacturer/device ID for this kind of
+flash.  The string is the user-presentable name of the flash
+chip.  lastly is the size of the flash device in bytes.
+
+The help that raincoat gives with no arguments is self-
+explanitory for the rest of the functionality:
+
+
+raincoat Flasher  0.1  Jan  6 2003  andy@warmcat.com  http://xbox-linux.sf.net
+Reading /etc/raincoat.conf
+
+Detected: SST SST49LF020 (256K)
+
+raincoat [-p filetoprog] [-r filetodumpto] [-a hexoffset] [-v]
+
+ -p filetoprog    Program flash with given file
+ -r filetodumpto  Read whole flash back into file
+ -a hexoffset     Optional start offset in flash, default 0
+ -v               Verbose informational messages
+
+Example:  raincoat -p cromwell.bin
+
+Please note, -p will reprogram your BIOS flash
+  Please do not use if you don't understand what that
+  means, there is no simple undo for this if you
+  programmed the wrong thing.
+  -r is always safe to use, as is running with no args
