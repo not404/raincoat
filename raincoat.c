@@ -342,6 +342,15 @@ int main(int argc, char * argv[])
 
 			if(BootFlashEraseMinimalRegion(&objectflash)) {
 				BootFlashProgram(&objectflash, pbFile);
+			} else {
+				printf("   Could your chip be write-protected?\n");
+				if(objectflash.m_bManufacturerId==0xbf) {
+					printf(
+						"   Matrix/Xodus users need their switches both off\n"
+						"   With a flashing orange LED.  Note that you need\n"
+						"   to cycle power to change switch mode\n"
+					);
+				}
 			}
 
 			free(pbFile);

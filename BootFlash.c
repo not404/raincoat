@@ -84,7 +84,7 @@ bool BootFlashEraseMinimalRegion( OBJECT_FLASH *pof )
 			if((dwLastEraseAddress & 0xfffff000)==(dw & 0xfffff000)) { // same 4K block?
 				nCountEraseRetryIn4KBlock--;
 				if(nCountEraseRetryIn4KBlock==0) { // run out of tries in this 4K block
-					if(pof->m_pcallbackFlash!=NULL) if(!(pof->m_pcallbackFlash)(pof, EE_ERASE_ERROR, dw-pof->m_dwLengthUsedArea, pof->m_dwLengthUsedArea)) return false;
+					if(pof->m_pcallbackFlash!=NULL) if(!(pof->m_pcallbackFlash)(pof, EE_ERASE_ERROR, dw-pof->m_dwStartOffset, pof->m_pbMemoryMappedStartAddress[dw])) return false;
 					if(pof->m_pcallbackFlash!=NULL) if(!(pof->m_pcallbackFlash)(pof, EE_ERASE_END, 0, 0)) return false;
 					return false; // failure
 				}
