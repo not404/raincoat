@@ -22,6 +22,11 @@
 # Pretty horrible, but will be functional if people stick to the formatting
 # of the flashtypes.h file
 #
+# v1.2
+# ----
+# * Changed the formatting of the console output to:
+#   "Name": ManID: 0x?? ProdID: 0x?? Size: ??Kb
+#
 # v1.1
 # ----
 # + Added a "--output" switch which enables the user to write the contents
@@ -99,28 +104,16 @@ fi
 found="unknown"
 for i in `cat "flashtypes.h"`; do
 	if [ $found == "name" ]; then
-		if [ -z ${output} ]; then
-			echo -n "Size:   "
-		fi
 		found="size"
 		size=$i
 	elif [ $found == "prodid" ]; then
-		if [ -z ${output} ]; then
-			echo -n "Name:   "
-		fi
 		found="name"
 		name=`echo $i | sed "s/\"//g" | sed "s/\,//g"`
 	elif [ $found == "manid" ]; then
-		if [ -z ${output} ]; then
-			echo -n "ProdID: "
-		fi
 		found="prodid"
 		prodid=`echo $i | sed "s/0x//g" | sed "s/\,//g"`
 	elif [ $found == "begin" ]; then
 		if [ $i != "0," ]; then
-			if [ -z ${output} ]; then
-				echo -n "ManID:  "
-			fi
 			found="manid"
 			manid=`echo $i | sed "s/0x//g" | sed "s/\,//g"`
 		else
@@ -136,13 +129,9 @@ for i in `cat "flashtypes.h"`; do
 		if [ $found == "size" ]; then
 			
 			hex=`echo $i | sed "s/0x//"`
-			
 			size=`echo "ibase=16; $hex" | bc`
 			size=`echo "$size/1024" | bc`
 			size="${size}KB"
-			if [ -z ${output} ]; then
-				echo -e "$size\n"
-			fi
 
 			if [ ! -z ${output} ]; then
 				flashCount=`expr ${flashCount} + 1`
@@ -153,10 +142,18 @@ for i in `cat "flashtypes.h"`; do
 				if [ $tiddler = 4 ]; then
 					tiddler=0
 				fi
-			fi
-		else
-			if [ -z ${output} ]; then
-				echo $i | sed "s/,//" | sed "s/\"//g"
+			else
+				echo -en "\"${name}\":"
+				if [ ${#name} -lt 13 ]; then
+					echo -ne "\t\t\t\t"
+				elif [ ${#name} -lt 21 ]; then
+					echo -ne "\t\t\t"
+				elif [ ${#name} -gt 28 ]; then
+					echo -ne "\t"
+				else
+					echo -ne "\t\t"
+				fi
+				echo -e "ManID: 0x${manid} ProdID: 0x${prodid} Size: ${size}" 
 			fi
 		fi
 	fi
