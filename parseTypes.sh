@@ -153,7 +153,7 @@ for i in `cat "flashtypes.h"`; do
 				else
 					echo -ne "\t\t"
 				fi
-				echo -e "ManID: 0x${manid} ProdID: 0x${prodid} Size: ${size}" 
+				echo -e "ManID: 0x${manid}, ProdID: 0x${prodid}, Size: ${size}" 
 			fi
 		fi
 	fi
