@@ -22,6 +22,10 @@
 # Pretty horrible, but will be functional if people stick to the formatting
 # of the flashtypes.h file
 #
+# v1.3
+# ----
+# + Added --help support.
+#
 # v1.2
 # ----
 # * Changed the formatting of the console output to:
@@ -52,7 +56,7 @@
 ###
 
 flashCount="0"
-version="v1.1"
+version="v1.3"
 tiddles=("\\" "|" "/" "-")
 tiddler="0"
 
@@ -98,7 +102,11 @@ if [ ! -z $1 ]; then
 		echo "" >> ${output}
 
 		echo -n "Parsing..."
-	fi
+	else
+		echo "Run with no arguments to print details to stdout"
+		echo "Run with '--output filename' to output to a file that can be parsed by raincoat."
+		exit 1
+	fi 
 fi
 
 found="unknown"
