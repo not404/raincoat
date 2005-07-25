@@ -1,6 +1,6 @@
-raincoat v0.6 2005-02-09
-andy@warmcat.com
-http://xbox-linux.sf.net
+raincoat v0.7 2005-07-25
+andy@warmcat.com, gentoox@shallax.com
+http://www.xbox-linux.org
 
 BRIEFLY
 
@@ -50,7 +50,7 @@ called raincoat.  This is ready to run.
 If you got raincoat as a tar, untar it into your home directory on
 your Xbox like this:
 
-# tar xzf raincoat-0.5.tar.gz
+# tar xzf raincoat-X.Y.tar.gz
 
 This will create a raincoat directory.  (You will already have this
 directory is you got it from CVS.)  Enter the directory
@@ -85,22 +85,20 @@ If /etc/raincoat.conf is not available, raincoat uses a built-in list
 of known flash devices which it supports.
 
 
-The help that raincoat gives with no arguments is self-
-explanitory for the rest of the functionality:
+To get help, run raincoat with a -h or --help argument:
 
-
-raincoat Flasher  0.5  Apr  14 2003  andy@warmcat.com  http://xbox-linux.sf.net
-Reading /etc/raincoat.conf
-
-Detected: SST SST49LF020 (256K)
+raincoat Flasher X.Y MMM DD YYYY
+Created by:    Andy Green    (andy@warmcat.com)
+Maintained by: Thomas Pedley (gentoox@shallax.com)
+Website:       http://www.xbox-linux.org
 
 raincoat [-p filetoprog] [-r filetodumpto] [-a hexoffset] [-v]
-
  -p filetoprog    Program flash with given file
  -r filetodumpto  Read whole flash back into file
  -a hexoffset     Optional start offset in flash, default 0
  -v               Verbose informational messages
 
+ -c configfile    Use a userdefined config File
 Example:  raincoat -p cromwell.bin
 
 Please note, -p will reprogram your BIOS flash
@@ -124,5 +122,5 @@ example:
 raincoat -a 80000 -p myfile.bin
 
 will reprogram the third quarter of a 1MByte flash only, assuming
-myfile.bin is 256KBytes.  The other four quarters will be
+myfile.bin is 256KBytes.  The other three quarters will be
 completely untouched.
