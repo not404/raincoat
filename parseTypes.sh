@@ -64,7 +64,17 @@ echo "parseTypes ${version} - The Raincoat flash parser (c) Thomas \"ShALLaX\" P
 echo "-----------------------------------------------------------------------"
 echo ""
 
-if [ ! -f "flashtypes.h" ]; then
+FLASHTYPES="NOTFOUND"
+
+if [ -f "./flashtypes.h" ]; then
+	FLASHTYPES="./flashtypes.h"
+fi
+
+if [ -f "./src/flashtypes.h" ]; then
+	FLASHTYPES="./src/flashtypes.h"
+fi
+
+if [ $FLASHTYPES == "NOTFOUND" ]; then
 	echo "Couldn't find 'flashtypes.h'."
 	exit 1
 fi
@@ -110,7 +120,7 @@ if [ ! -z $1 ]; then
 fi
 
 found="unknown"
-for i in `cat "flashtypes.h"`; do
+for i in `cat $FLASHTYPES`; do
 	if [ $found == "name" ]; then
 		found="size"
 		size=$i

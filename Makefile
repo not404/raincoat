@@ -7,6 +7,7 @@ raincoat: src/raincoat.c src/BootFlash.c src/boot.h src/BootFlash.h
 clean:
 	rm -f src/*.o
 	rm -rf bin
+	rm -f src/*~
 	rm -f *~
 	
 install:
