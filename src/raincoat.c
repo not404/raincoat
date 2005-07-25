@@ -213,7 +213,7 @@ int main(int argc, char * argv[])
 					" -v               Verbose informational messages\n"
 					" -h               This screen\n"
 					" -c configfile    Use a userdefined config File\n\n" 
-					"Example:  %s -p cromwell.bin\n\n"
+					"Example: %s -p cromwell.bin\n\n"
 					"Please note, -p will reprogram your BIOS flash\n"
 					"  Please do not use if you don't understand what that\n"
 					"  means, there is no simple undo for this if you\n"
