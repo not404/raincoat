@@ -9,6 +9,9 @@
  ***************************************************************************/
 
  /*
+  2005-07-25  gentoox@shallax.com  + Reworked the help logic to accept 
+												 -h/ --help.  Help is now displayed 
+                                     regardless of whether a chip was recognised
   2005-02-09  gentoox@shallax.com  + Added a load of flash types
   2003-01-27  andy@warmcat.com     + Cosmetic edits, using character bars for 
 											    progress
@@ -34,7 +37,7 @@
 
 #include "BootFlash.h"
 
-#define RAINCOAT_VERSION "0.6"
+#define RAINCOAT_VERSION "0.7"
 
 bool FlashingCallback(void * pvoidObjectFlash, ENUM_EVENTS ee, DWORD dwPos, DWORD dwExtent);
 
@@ -138,7 +141,7 @@ int main(int argc, char * argv[])
 
 	strcpy(&objectflash.m_szFlashDescription[0], "Unknown");
 
-	printf("raincoat Flasher  "RAINCOAT_VERSION"  " __DATE__ "  andy@warmcat.com  http://xbox-linux.sf.net\n");
+	printf("raincoat Flasher "RAINCOAT_VERSION" ("__DATE__")\n");
 
 		// map the BIOS region 0xff000000 - 0xffffffff so that we can touch it
 
@@ -192,11 +195,32 @@ int main(int argc, char * argv[])
 				fVerbose=true;
 			}
 
-			if(strcmp(argv[n], "-c")==0) { // verbose
+			if(strcmp(argv[n], "-c")==0) { // config file
 				n++;
 				strcpy(szConfigFile,argv[n]);
 			}
 
+			if((strcmp(argv[n], "-h")==0) || 
+				(strcmp(argv[n], "--help")==0)) { // help
+				printf(
+					"Created by:    Andy Green    (andy@warmcat.com)\n"
+					"Maintained by: Thomas Pedley (gentoox@shallax.com)\n"
+					"Website:       http://www.xbox-linux.org\n\n"
+					"%s [-p filetoprog] [-r filetodumpto] [-a hexoffset] [-v]\n"
+					" -p filetoprog    Program flash with given file\n"
+					" -r filetodumpto  Read whole flash back into file\n"
+					" -a hexoffset     Optional start offset in flash, default 0\n"
+					" -v               Verbose informational messages\n\n"
+					" -c configfile    Use a userdefined config File\n" 
+					"Example:  %s -p cromwell.bin\n\n"
+					"Please note, -p will reprogram your BIOS flash\n"
+					"  Please do not use if you don't understand what that\n"
+					"  means, there is no simple undo for this if you\n"
+					"  programmed the wrong thing.\n"
+					"  -r is always safe to use, as is running with no args\n", argv[0], argv[0]
+				);
+				return 0;
+			}
 			n++;
 		}
 	}
@@ -206,7 +230,7 @@ int main(int argc, char * argv[])
 	{
 		int fileRead;
 		struct stat statFile;
-		printf("Reading %s... ",szConfigFile);
+		printf("Trying to read %s... ",szConfigFile);
 
 		fileRead = open(szConfigFile, O_RDONLY);
 		if(fileRead>0) {
@@ -301,10 +325,13 @@ int main(int argc, char * argv[])
 			}
 			close(fileRead);
 		} else {
-			printf("(unable to open %s, using default list)\n",szConfigFile);
+			printf("not found, using default list.\n");
 		}
 	}
 
+	if(argc==1) {
+		printf("Use %s --help for more details\n", argv[0]);
+	}
 
 		// check device type, and exit if we don't recognize it
 
@@ -324,25 +351,6 @@ int main(int argc, char * argv[])
 			printf("-a start offset 0x%lX is too large for ROM size 0x%lX\n", objectflash.m_dwStartOffset, objectflash.m_dwLengthInBytes);
 		}
 	}
-
-	if(argc==1) {
-		printf(
-			"\nraincoat [-p filetoprog] [-r filetodumpto] [-a hexoffset] [-v]\n\n"
-			" -p filetoprog    Program flash with given file\n"
-			" -r filetodumpto  Read whole flash back into file\n"
-			" -a hexoffset     Optional start offset in flash, default 0\n"
-			" -v               Verbose informational messages\n\n"
-			" -c configfile    Use a userdefined config File\n" 
-			"Example:  raincoat -p cromwell.bin\n\n"
-			"Please note, -p will reprogram your BIOS flash\n"
-			"  Please do not use if you don't understand what that\n"
-			"  means, there is no simple undo for this if you\n"
-			"  programmed the wrong thing.\n"
-			"  -r is always safe to use, as is running with no args\n"
-		);
-		return 1;
-	}
-
 
 
 		// perform the selected actions according to commandline switches
