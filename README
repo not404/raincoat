@@ -92,13 +92,14 @@ Created by:    Andy Green    (andy@warmcat.com)
 Maintained by: Thomas Pedley (gentoox@shallax.com)
 Website:       http://www.xbox-linux.org
 
-raincoat [-p filetoprog] [-r filetodumpto] [-a hexoffset] [-v]
+raincoat [-p filetoprog] [-r filetodumpto] [-a hexoffset] [-v] [-h] [-c]
  -p filetoprog    Program flash with given file
  -r filetodumpto  Read whole flash back into file
  -a hexoffset     Optional start offset in flash, default 0
  -v               Verbose informational messages
-
+ -h               This screen
  -c configfile    Use a userdefined config File
+
 Example:  raincoat -p cromwell.bin
 
 Please note, -p will reprogram your BIOS flash
