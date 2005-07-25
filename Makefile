@@ -13,4 +13,3 @@ clean:
 install:
 	cp ./etc/raincoat.conf $(DESTDIR)/etc/
 	cp ./bin/raincoat $(DESTDIR)/usr/bin/
-	chmod 755 $(DESTDIR)/usr/bin/raincoat
