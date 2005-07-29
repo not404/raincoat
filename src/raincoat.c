@@ -9,6 +9,7 @@
  ***************************************************************************/
 
  /*
+  2005-07-29  gentoox@shallax.com  + Added Rink's BSD support patch
   2005-07-25  gentoox@shallax.com  + Reworked the help logic to accept 
 												 -h/ --help.  Help is now displayed 
                                      regardless of whether a chip was recognised
@@ -29,7 +30,11 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#if defined(linux)
 #include <sys/io.h>
+#elif defined(NetBSD)
+#include <machine/sysarch.h>
+#endif
 #include <ctype.h>
 #include <signal.h>
 
@@ -37,7 +42,7 @@
 
 #include "BootFlash.h"
 
-#define RAINCOAT_VERSION "0.7"
+#define RAINCOAT_VERSION "0.8"
 
 bool FlashingCallback(void * pvoidObjectFlash, ENUM_EVENTS ee, DWORD dwPos, DWORD dwExtent);
 
@@ -121,6 +126,9 @@ int main(int argc, char * argv[])
 	char szFilepathProgram[256]="";
 	char szFilepathReadback[256]="";
 	int fileMem;
+#if defined(__FreeBSD__)
+	int fileIO;
+#endif
 	char szConfigFile[1024];
 
 	//For some reason (anyone?) we OCCASIONALLY get a SIGTRAP, which
@@ -146,11 +154,29 @@ int main(int argc, char * argv[])
 		// map the BIOS region 0xff000000 - 0xffffffff so that we can touch it
 
 	fileMem = open("/dev/mem", O_RDWR);
-	if(!fileMem) { printf("Must be run as root\n"); return 1; }
+	if(fileMem < 0)
+	{
+		printf ("Cannot open /dev/mem - are you root?\n");
+		return 1;
+	}
+
 	objectflash.m_pbMemoryMappedStartAddress = (BYTE *)mmap(0, 0x1000000, PROT_READ | PROT_WRITE, MAP_SHARED, fileMem , 0xff000000);
 	if(objectflash.m_pbMemoryMappedStartAddress==NULL) { printf("Unable to map register memory\n"); return 1; }
 
-	if (iopl(3)) {perror("iopl"); return 1;}
+#if defined(linux)
+	if (iopl (3))
+#elif defined(NetBSD)
+	if (i386_iopl (3))
+#elif defined(__FreeBSD__)
+	fileIO = open ("/dev/io", O_RDWR);
+	if (fileIO < 0)
+#else
+#error "No I/O privileges possible?"
+#endif
+	{
+		printf ("Cannot acquire I/O privileges");
+		return 1;
+	}
 
 		// parse arguments
 
@@ -427,10 +453,11 @@ int main(int argc, char * argv[])
 
 		// finished with mapping
 
-	if (iopl( 0)) {perror("ioperm"); return 1;}
-
 	munmap((void *)objectflash.m_pbMemoryMappedStartAddress, 0x1000000);
 	close(fileMem);
+#if defined(__FreeBSD__)
+	close(fileIO);
+#endif
 
 	printf("Completed\n");
 
