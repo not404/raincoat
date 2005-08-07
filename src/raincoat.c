@@ -48,7 +48,7 @@ bool FlashingCallback(void * pvoidObjectFlash, ENUM_EVENTS ee, DWORD dwPos, DWOR
 
 OBJECT_FLASH objectflash;
 
-KNOWN_FLASH_TYPE aknownflashtype[1024] = { // Max of 1024 flash types.
+KNOWN_FLASH_TYPE aknownflashtype[1024] = { // Max of 1023 flash types (+1 terminator).
 #include "flashtypes.h"
 };
 
@@ -357,7 +357,37 @@ int main(int argc, char * argv[])
 															// Warn when the last possible flash is going to be added.
 															printf("  (note, raincoat only supports %d flash types, rest ignored)\n", (sizeof(aknownflashtype)/sizeof(KNOWN_FLASH_TYPE))-1);
 														}
+														/*
+														printf("DEBUG: Added to pos %i\n", nCountSeen);
+														printf("DEBUG: prev2 0x%02X, 0x%02X, '%s', %08lX\n",
+                                             aknownflashtype[nCountSeen-2].m_bManufacturerId,
+                                             aknownflashtype[nCountSeen-2].m_bDeviceId,
+                                             aknownflashtype[nCountSeen-2].m_szFlashDescription,
+                                             aknownflashtype[nCountSeen-2].m_dwLengthInBytes
+                                          );
+														printf("DEBUG: prev1 0x%02X, 0x%02X, '%s', %08lX\n",
+                                             aknownflashtype[nCountSeen-1].m_bManufacturerId,
+                                             aknownflashtype[nCountSeen-1].m_bDeviceId,
+                                             aknownflashtype[nCountSeen-1].m_szFlashDescription,
+                                             aknownflashtype[nCountSeen-1].m_dwLengthInBytes
+                                          );
+														printf("DEBUG: WAS 0x%02X, 0x%02X, '%s', %08lX\n",
+                                             aknownflashtype[nCountSeen].m_bManufacturerId,
+                                             aknownflashtype[nCountSeen].m_bDeviceId,
+                                             aknownflashtype[nCountSeen].m_szFlashDescription,
+                                             aknownflashtype[nCountSeen].m_dwLengthInBytes
+                                          );
+														*/
 														aknownflashtype[nCountSeen] = pkft;
+
+														/*
+														printf("DEBUG: NOW 0x%02X, 0x%02X, '%s', %08lX\n\n",
+                                             aknownflashtype[nCountSeen].m_bManufacturerId,
+                                             aknownflashtype[nCountSeen].m_bDeviceId,
+                                             aknownflashtype[nCountSeen].m_szFlashDescription,
+                                             aknownflashtype[nCountSeen].m_dwLengthInBytes
+                                          );
+														*/
 														nCountSeen++;
 														nFlashesFromFile++;
 													}
@@ -382,9 +412,10 @@ int main(int argc, char * argv[])
 
 				printf("%d flash types added from file.\n", nFlashesFromFile);
 
-						// terminating entry is all zeros
-
-				//memset(pkft, 0, sizeof(KNOWN_FLASH_TYPE));
+				// terminating entry is all zeros
+				//printf("DEBUG: terminator = %i\n", nCountSeen);
+				KNOWN_FLASH_TYPE *final = &aknownflashtype[nCountSeen];
+				memset(final, 0, sizeof(KNOWN_FLASH_TYPE));
 			}
 			close(fileRead);
 		} else {
@@ -394,10 +425,9 @@ int main(int argc, char * argv[])
 
 	printf("Total known flashes: %i\n", nCountSeen);
 
-
 	if(fVerbose) {
 		flashIterator = 0;
-		printf("Final list of known flash types:\n");
+		printf("\nFinal list of known flash types:\n");
 		while(flashIterator < nCountSeen) {
 			printf("  0x%02X, 0x%02X, '%s', %08lX\n",
 				aknownflashtype[flashIterator].m_bManufacturerId,
@@ -412,7 +442,7 @@ int main(int argc, char * argv[])
 		printf("Use %s --help for more details\n", argv[0]);
 	}
 
-		// check device type, and exit if we don't recognize it
+	// check device type, and exit if we don't recognize it
 
 	{
 		if(BootFlashGetDescriptor(&objectflash, &aknownflashtype[0])) {
@@ -431,8 +461,7 @@ int main(int argc, char * argv[])
 		}
 	}
 
-
-		// perform the selected actions according to commandline switches
+	// perform the selected actions according to commandline switches
 
 	if(fProgram) { // perform programming action
 		struct stat statFile;
