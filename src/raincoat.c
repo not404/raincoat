@@ -48,7 +48,7 @@ bool FlashingCallback(void * pvoidObjectFlash, ENUM_EVENTS ee, DWORD dwPos, DWOR
 
 OBJECT_FLASH objectflash;
 
-KNOWN_FLASH_TYPE aknownflashtype[155] = { // Max of 1024 flash types.
+KNOWN_FLASH_TYPE aknownflashtype[1024] = { // Max of 1024 flash types.
 #include "flashtypes.h"
 };
 
