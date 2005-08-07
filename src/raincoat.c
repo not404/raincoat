@@ -42,13 +42,13 @@
 
 #include "BootFlash.h"
 
-#define RAINCOAT_VERSION "0.8"
+#define RAINCOAT_VERSION "0.9"
 
 bool FlashingCallback(void * pvoidObjectFlash, ENUM_EVENTS ee, DWORD dwPos, DWORD dwExtent);
 
 OBJECT_FLASH objectflash;
 
-KNOWN_FLASH_TYPE aknownflashtype[1024] = { // Max of 1024 flash types.
+KNOWN_FLASH_TYPE aknownflashtype[155] = { // Max of 1024 flash types.
 #include "flashtypes.h"
 };
 
@@ -149,6 +149,12 @@ int main(int argc, char * argv[])
 
 	strcpy(&objectflash.m_szFlashDescription[0], "Unknown");
 
+
+	int nCountSeen=0;
+	int flashIterator=0;
+	while((aknownflashtype[nCountSeen].m_bManufacturerId != 0) && (aknownflashtype[nCountSeen].m_bDeviceId != 0)) {
+		nCountSeen++;
+	}
 	printf("raincoat Flasher "RAINCOAT_VERSION" ("__DATE__")\n");
 
 		// map the BIOS region 0xff000000 - 0xffffffff so that we can touch it
@@ -257,6 +263,7 @@ int main(int argc, char * argv[])
 	{
 		int fileRead;
 		struct stat statFile;
+		int nFlashesFromFile = 0;
 		printf("Trying to read %s... ",szConfigFile);
 
 		fileRead = open(szConfigFile, O_RDONLY);
@@ -267,12 +274,11 @@ int main(int argc, char * argv[])
 			if(fVerbose) printf("\n");
 
 			{
-				KNOWN_FLASH_TYPE *pkft=&aknownflashtype[0];
+				KNOWN_FLASH_TYPE pkft;
 				BYTE * pbFile = (BYTE *)malloc(statFile.st_size+1);
 				char * sz=(char *)pbFile;
-				int nCountMaximumFlashTypes=(sizeof(aknownflashtype)/sizeof(KNOWN_FLASH_TYPE))-1;
-				int nCountSeen=0;
-
+				int found = 0;
+				int nCountMaximumFlashTypes=(sizeof(aknownflashtype)/sizeof(KNOWN_FLASH_TYPE))-1-nCountSeen;
 				if(pbFile==NULL) { printf("unable to allocate %u bytes of memory\n", (unsigned int)statFile.st_size); return 1; }
 				if(read(fileRead, &pbFile[0], statFile.st_size)<statFile.st_size) {
 					printf("Failed to read full file\n");
@@ -296,17 +302,17 @@ int main(int argc, char * argv[])
 								while((n--)&&(*sz!=',')) sz++;
 								if(n>=0) {
 									sscanf(szHex, "%x", &n);
-									pkft->m_bManufacturerId=(BYTE)(n>>8);
-									pkft->m_bDeviceId=(BYTE)n;
+									pkft.m_bManufacturerId=(BYTE)(n>>8);
+									pkft.m_bDeviceId=(BYTE)n;
 									while((*sz) && (*sz!='\"')) sz++;
-									n=sizeof(pkft->m_szFlashDescription)-1;
+									n=sizeof(pkft.m_szFlashDescription)-1;
 									if(*sz) {
 										int nPos=0;
 										sz++;
 										while((n--) && (*sz) && (*sz!='\"')) {
-											pkft->m_szFlashDescription[nPos++]=*sz++;
+											pkft.m_szFlashDescription[nPos++]=*sz++;
 										}
-										pkft->m_szFlashDescription[nPos++]='\0';
+										pkft.m_szFlashDescription[nPos++]='\0';
 										if(*sz) {
 											while((*sz) && (*sz!='x')) sz++;
 											if(*sz) {
@@ -315,19 +321,49 @@ int main(int argc, char * argv[])
 												n=9;
 												while((n--)&&(!isspace(*sz)) ) sz++;
 												if(n>=0) {
-													sscanf(szHex, "%lx", &pkft->m_dwLengthInBytes);
+													sscanf(szHex, "%lx", &pkft.m_dwLengthInBytes);
 
-													if(fVerbose) printf("  0x%02X, 0x%02X, '%s', %08lX\n",
-														pkft->m_bManufacturerId,
-														pkft->m_bDeviceId,
-														pkft->m_szFlashDescription,
-														pkft->m_dwLengthInBytes
-													);
-
-													pkft++; nCountSeen++;
-													if((--nCountMaximumFlashTypes)==0) { //
-														printf("  (note, raincoat only supports %d flash types, rest ignored)\n", (sizeof(aknownflashtype)/sizeof(KNOWN_FLASH_TYPE))-1);
+													if(fVerbose) {
+														printf("  0x%02X, 0x%02X, '%s', %08lX",
+															pkft.m_bManufacturerId,
+															pkft.m_bDeviceId,
+															pkft.m_szFlashDescription,
+															pkft.m_dwLengthInBytes
+														);
 													}
+													flashIterator=0;
+													while(flashIterator < nCountSeen) {
+														// If this is true then the flash is already known about...
+														if(pkft.m_bManufacturerId == aknownflashtype[flashIterator].m_bManufacturerId) {
+															if(pkft.m_bDeviceId == aknownflashtype[flashIterator].m_bDeviceId) {
+																if(fVerbose) {
+																	printf(" - already known.");
+																}
+																// Flag it as such.
+																found = 1;
+															}
+														}
+														flashIterator++;
+													}
+
+													if(fVerbose) {
+														printf("\n");
+													}
+
+													// If we didn't already know about this flash...
+													if(found == 0) {
+														// Add the flash.
+														if((--nCountMaximumFlashTypes)==0) { //
+															// Warn when the last possible flash is going to be added.
+															printf("  (note, raincoat only supports %d flash types, rest ignored)\n", (sizeof(aknownflashtype)/sizeof(KNOWN_FLASH_TYPE))-1);
+														}
+														aknownflashtype[nCountSeen] = pkft;
+														nCountSeen++;
+														nFlashesFromFile++;
+													}
+
+													found = 0;
+													flashIterator=0;
 												}
 											}
 										}
@@ -344,11 +380,11 @@ int main(int argc, char * argv[])
 
 				free(pbFile);
 
-				printf("%d flash types read\n", nCountSeen);
+				printf("%d flash types added from file.\n", nFlashesFromFile);
 
 						// terminating entry is all zeros
 
-				memset(pkft, 0, sizeof(KNOWN_FLASH_TYPE));
+				//memset(pkft, 0, sizeof(KNOWN_FLASH_TYPE));
 			}
 			close(fileRead);
 		} else {
@@ -356,6 +392,22 @@ int main(int argc, char * argv[])
 		}
 	}
 
+	printf("Total known flashes: %i\n", nCountSeen);
+
+
+	if(fVerbose) {
+		flashIterator = 0;
+		printf("Final list of known flash types:\n");
+		while(flashIterator < nCountSeen) {
+			printf("  0x%02X, 0x%02X, '%s', %08lX\n",
+				aknownflashtype[flashIterator].m_bManufacturerId,
+				aknownflashtype[flashIterator].m_bDeviceId,
+				aknownflashtype[flashIterator].m_szFlashDescription,
+				aknownflashtype[flashIterator].m_dwLengthInBytes
+			);
+			flashIterator++;
+		}
+	}
 	if(argc==1) {
 		printf("Use %s --help for more details\n", argv[0]);
 	}
@@ -368,7 +420,7 @@ int main(int argc, char * argv[])
 		} else {
 			if(!fReadback) {
 				printf("\nUNKNOWN DEVICE %s\n", objectflash.m_szFlashDescription);
-				printf("Try adding the device ID to /etc/raincoat.conf\n");
+				printf("Try adding the device ID to %s\n", szConfigFile);
 				
 				return(1);
 			}
