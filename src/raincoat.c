@@ -9,15 +9,23 @@
  ***************************************************************************/
 
  /*
-  2005-07-29  gentoox@shallax.com  + Added Rink's BSD support patch
+  2005-08-11  gentoox@shallax.com  + Added eXOBeX's JEDEC compliance tests
+                                     to ensure that an invalid manufacturer ID
+                                     is correctly ignored.
+
+  2005-07-29  gentoox@shallax.com  + Added Rink's BSD support patch.
+
   2005-07-25  gentoox@shallax.com  + Reworked the help logic to accept 
 												 -h/ --help.  Help is now displayed 
-                                     regardless of whether a chip was recognised
-  2005-02-09  gentoox@shallax.com  + Added a load of flash types
+                                     regardless of whether a chip was 
+                                     recognised.
+  2005-02-09  gentoox@shallax.com  + Added a load of flash types.
+
   2003-01-27  andy@warmcat.com     + Cosmetic edits, using character bars for 
-											    progress
-                                   + Support for 28xxx flash
-  2003-01-06  andy@warmcat.com     + Created
+											    progress.
+                                   + Support for 28xxx flash.
+
+  2003-01-06  andy@warmcat.com     + Created.
  */
 
 #include <stdio.h>
@@ -42,7 +50,7 @@
 
 #include "BootFlash.h"
 
-#define RAINCOAT_VERSION "0.9"
+#define RAINCOAT_VERSION "0.10"
 
 bool FlashingCallback(void * pvoidObjectFlash, ENUM_EVENTS ee, DWORD dwPos, DWORD dwExtent);
 
@@ -115,7 +123,25 @@ bool FlashingCallback(void * pvoidof, ENUM_EVENTS ee, DWORD dwPos, DWORD dwExten
 	return true;
 }
 
-
+// Check that the manufacturer ID is valid (if not then we probably have some
+// bad soldering on our hands or a write-protected modchip).
+void checkID() {
+	if((((objectflash.m_bManufacturerId & 1) +
+	((objectflash.m_bManufacturerId >> 1) & 1) +
+	((objectflash.m_bManufacturerId >> 2) & 1) +
+	((objectflash.m_bManufacturerId >> 3) & 1) +
+	((objectflash.m_bManufacturerId >> 4) & 1) +
+	((objectflash.m_bManufacturerId >> 5) & 1) +
+	((objectflash.m_bManufacturerId >> 6) & 1) +
+	((objectflash.m_bManufacturerId >> 7) & 1)) & 1)==0) {
+		// valid JEDEC manufacturer IDs are always odd-parity
+		printf("\n!! Invalid manufacturer ID: 0x%02X\n",
+				 objectflash.m_bManufacturerId);
+		printf("Check all your soldering points and check that write-enable "
+				 "switch is enabled.\n");
+		exit(1);
+	}
+}
 
 
 int main(int argc, char * argv[])
@@ -152,6 +178,7 @@ int main(int argc, char * argv[])
 
 	int nCountSeen=0;
 	int flashIterator=0;
+	int pathSet=0;
 	while((aknownflashtype[nCountSeen].m_bManufacturerId != 0) && (aknownflashtype[nCountSeen].m_bDeviceId != 0)) {
 		nCountSeen++;
 	}
@@ -230,6 +257,7 @@ int main(int argc, char * argv[])
 			if(strcmp(argv[n], "-c")==0) { // config file
 				n++;
 				strcpy(szConfigFile,argv[n]);
+				pathSet = 1;
 			}
 
 			if((strcmp(argv[n], "-h")==0) || 
@@ -264,9 +292,13 @@ int main(int argc, char * argv[])
 		int fileRead;
 		struct stat statFile;
 		int nFlashesFromFile = 0;
-		printf("Trying to read %s... ",szConfigFile);
+		printf("Trying to read \"%s\"... ",szConfigFile);
 
 		fileRead = open(szConfigFile, O_RDONLY);
+		if((fileRead<=0) && (pathSet == 0)) {
+			printf("Not found.\nTrying to read \"./raincoat.conf\"... ");
+			fileRead = open("./raincoat.conf", O_RDONLY);
+		}
 		if(fileRead>0) {
 
 			fstat(fileRead, &statFile);
@@ -419,7 +451,7 @@ int main(int argc, char * argv[])
 			}
 			close(fileRead);
 		} else {
-			printf("not found, using default list.\n");
+			printf("Not found, using built-in list.\n");
 		}
 	}
 
@@ -446,8 +478,10 @@ int main(int argc, char * argv[])
 
 	{
 		if(BootFlashGetDescriptor(&objectflash, &aknownflashtype[0])) {
+			checkID();
 			printf("\nDETECTED: %s\n", objectflash.m_szFlashDescription);
 		} else {
+			checkID();
 			if(!fReadback) {
 				printf("\nUNKNOWN DEVICE %s\n", objectflash.m_szFlashDescription);
 				printf("Try adding the device ID to %s\n", szConfigFile);
