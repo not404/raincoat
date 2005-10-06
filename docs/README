@@ -1,4 +1,4 @@
-raincoat v0.7 2005-07-25
+raincoat v0.11 2005-10-06
 andy@warmcat.com, gentoox@shallax.com
 http://www.xbox-linux.org
 
@@ -19,7 +19,7 @@ run ./parseTypes.sh for a complete list):
   AMD - Am29F040B				512KByte   Found in some 29wire mods
   Winbond - W49F002U			256KByte   v1.2/v1.3[3]
   MACRONIX - MX29F022NTPC	256KByte   v1.2/v1.3 [3]
-  AMD - Am29LV800B			1024KByte  Chaemeleon [4]
+  AMD - Am29LV800B			1024KByte  Chaemeleon
 
 [1] Sharp TSOP LHF08CH1/28F008 confirmed working thanks to Daniel 
 Jonsson.  NOTE that for the Sharp chip you must link TSOP.p11 to 
@@ -38,8 +38,6 @@ on the TSOP are in a different place than the v1.0 and v1.1.
 [3] Thanks to OzShadow (OzXchip) for pointing these guys out and
 sending us the info these should all be fairly straight forward
 
-[4] Xodus/Chaemeleon untested, hopefully it will be tested soon
-
 ''Everyone knows all flashers prefer to use a raincoat.''
 
 INSTALLING
@@ -57,10 +55,17 @@ directory is you got it from CVS.)  Enter the directory
 
 # cd raincoat
 
-To remake raincoat, you do the following:
+To remake raincoat (for Linux), you do the following:
 
 # make
-# su <give root password, xbox by default>
+# su <give root password>
+# make install
+
+To remake raincoat (for NetBSD), you do the following:
+
+# mv Makefile.NetBSD Makefile
+# make
+# su <give root password>
 # make install
 
 Now you can use raincoat from any directory

@@ -9,6 +9,9 @@
  ***************************************************************************/
 
  /*
+  2005-10-16  gentoox@shallax.com  * Updated and tested NetBSD/ FreeBSD patches.
+                                     Thanks to Ed and Rink.
+
   2005-08-11  gentoox@shallax.com  + Added eXOBeX's JEDEC compliance tests
                                      to ensure that an invalid manufacturer ID
                                      is correctly ignored.
@@ -40,7 +43,7 @@
 #include <fcntl.h>
 #if defined(linux)
 #include <sys/io.h>
-#elif defined(NetBSD)
+#elif defined(__NetBSD__)
 #include <machine/sysarch.h>
 #endif
 #include <ctype.h>
@@ -50,7 +53,7 @@
 
 #include "BootFlash.h"
 
-#define RAINCOAT_VERSION "0.10"
+#define RAINCOAT_VERSION "0.11"
 
 bool FlashingCallback(void * pvoidObjectFlash, ENUM_EVENTS ee, DWORD dwPos, DWORD dwExtent);
 
@@ -198,7 +201,7 @@ int main(int argc, char * argv[])
 
 #if defined(linux)
 	if (iopl (3))
-#elif defined(NetBSD)
+#elif defined(__NetBSD__)
 	if (i386_iopl (3))
 #elif defined(__FreeBSD__)
 	fileIO = open ("/dev/io", O_RDWR);
@@ -207,7 +210,7 @@ int main(int argc, char * argv[])
 #error "No I/O privileges possible?"
 #endif
 	{
-		printf ("Cannot acquire I/O privileges");
+		printf ("Cannot acquire I/O privileges\n");
 		return 1;
 	}
 
@@ -322,7 +325,7 @@ int main(int argc, char * argv[])
 				while((*sz) && (nCountMaximumFlashTypes)) {
 					if((strncmp(sz, "flash", 5)==0) || (strncmp(sz, "Flash", 5)==0) ) { // candidate
 						sz+=5;
-						while((*sz) && (isspace(*sz))) sz++;
+						while((*sz) && (isspace((int) *sz))) sz++;
 						if(*sz=='=') {
 							while((*sz) && (*sz!='x')) sz++;
 							if(*sz) {
@@ -351,7 +354,7 @@ int main(int argc, char * argv[])
 												sz++;
 												szHex=sz;
 												n=9;
-												while((n--)&&(!isspace(*sz)) ) sz++;
+												while((n--)&&(!isspace((int) *sz)) ) sz++;
 												if(n>=0) {
 													sscanf(szHex, "%lx", &pkft.m_dwLengthInBytes);
 
