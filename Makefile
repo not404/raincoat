@@ -1,8 +1,11 @@
+CC?=		cc
+CFLAGS?=	-O -pipe
+
 all: raincoat
 
 raincoat: src/raincoat.c src/BootFlash.c src/boot.h src/BootFlash.h
 	mkdir -p bin
-	gcc -static -O2 -Wall -Werror -o ./bin/raincoat src/raincoat.c src/BootFlash.c
+	$(CC) -static -Wall -Werror $(CFLAGS) -o ./bin/raincoat src/raincoat.c src/BootFlash.c
 
 clean:
 	rm -f src/*.o
@@ -13,3 +16,4 @@ clean:
 install:
 	cp ./etc/raincoat.conf $(DESTDIR)/etc/
 	cp ./bin/raincoat $(DESTDIR)/usr/bin/
+	chmod 755 $(DESTDIR)/usr/bin/raincoat

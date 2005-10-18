@@ -63,8 +63,7 @@ To remake raincoat (for Linux), you do the following:
 
 To remake raincoat (for NetBSD), you do the following:
 
-# mv Makefile.NetBSD Makefile
-# make
+# make -f Makefile.NetBSD
 # su <give root password>
 # make install
 

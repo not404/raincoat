@@ -1,8 +1,11 @@
+CC?=		cc
+CFLAGS?=	-O -pipe
+
 all: raincoat
 
 raincoat: src/raincoat.c src/BootFlash.c src/boot.h src/BootFlash.h
 	mkdir -p bin
-	gcc -li386 -static -O2 -Wall -Werror -o ./bin/raincoat src/raincoat.c src/BootFlash.c
+	$(CC) -static -Wall -Werror $(CFLAGS) -o ./bin/raincoat src/raincoat.c src/BootFlash.c -li386
 
 clean:
 	rm -f src/*.o
