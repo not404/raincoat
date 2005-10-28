@@ -111,63 +111,40 @@ if [ ! -z $1 ]; then
 	fi 
 fi
 
-found="unknown"
-for i in `cat $FLASHTYPES`; do
-	if [ $found == "name" ]; then
-		found="size"
-		size=$i
-	elif [ $found == "prodid" ]; then
-		found="name"
-		name=`echo $i | sed -e "s/\"//g" -e "s/\,//g"`
-	elif [ $found == "manid" ]; then
-		found="prodid"
-		prodid=`echo $i | sed -e "s/0x//g" -e "s/\,//g"`
-	elif [ $found == "begin" ]; then
-		if [ $i != "0," ]; then
-			found="manid"
-			manid=`echo $i | sed -e "s/0x//g" -e "s/\,//g"`
-		else
-			found="unknown"
-		fi
-	elif [ `echo $i | awk '{ print $1 }'` == "{" ]; then
-	   found="begin";
-	elif [ $found == "manid" ] && [ $i == "0," ]; then
-		found="unknown"
-	fi
+while read x manid prodid name size y; do
+	if [ "$x" = "{" ] && [ "$y" = "}," ]; then
+		manid=`echo $manid | sed -e "s/0x//g" -e "s/\,//g"`
+		prodid=`echo $prodid | sed -e "s/0x//g" -e "s/\,//g"`
+		name=`echo $name | sed -e "s/\"//g" -e "s/\,//g"`
+	
+		hex=`echo $size | sed "s/0x//"`
+		size=`echo "ibase=16; $hex" | bc`
+		size="`echo "$size/1024" | bc`KB"
 
-	if [ $found != "unknown" ] && [ $i != "{" ] && [ $i != "}," ]; then
-		if [ $found == "size" ]; then
-			
-			hex=`echo $i | sed "s/0x//"`
-			size=`echo "ibase=16; $hex" | bc`
-			size=`echo "$size/1024" | bc`
-			size="${size}KB"
-
-			if [ ! -z ${output} ]; then
-				flashCount=`expr ${flashCount} + 1`
-				echo "Flash = 0x${manid}${prodid},\"${name}\",0x${hex}" >> ${output}
-				echo -ne "${tiddles[${tiddler}]}"
-				echo -ne "\b"
-				tiddler=`expr $tiddler + 1`
-				if [ $tiddler = 4 ]; then
-					tiddler=0
-				fi
-			else
-				echo -en "\"${name}\":"
-				if [ ${#name} -lt 13 ]; then
-					echo -ne "\t\t\t\t"
-				elif [ ${#name} -lt 21 ]; then
-					echo -ne "\t\t\t"
-				elif [ ${#name} -gt 28 ]; then
-					echo -ne "\t"
-				else
-					echo -ne "\t\t"
-				fi
-				echo -e "ManID: 0x${manid}, ProdID: 0x${prodid}, Size: ${size}" 
+		if [ ! -z ${output} ]; then
+			flashCount=`expr ${flashCount} + 1`
+			echo "Flash = 0x${manid}${prodid},\"${name}\",0x${hex}" >> ${output}
+			echo -ne "${tiddles[${tiddler}]}"
+			echo -ne "\b"
+			tiddler=`expr $tiddler + 1`
+			if [ $tiddler = 4 ]; then
+				tiddler=0
 			fi
+		else
+			echo -en "\"${name}\":"
+			if [ ${#name} -lt 13 ]; then
+				echo -ne "\t\t\t\t"
+			elif [ ${#name} -lt 21 ]; then
+				echo -ne "\t\t\t"
+			elif [ ${#name} -gt 28 ]; then
+				echo -ne "\t"
+			else
+				echo -ne "\t\t"
+			fi
+			echo -e "ManID: 0x${manid}, ProdID: 0x${prodid}, Size: ${size}" 
 		fi
 	fi
-done
+done  < $FLASHTYPES
 
 if [ ! -z ${output} ]; then
 	echo "Done."
