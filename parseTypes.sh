@@ -1,4 +1,4 @@
-#!/bin/bash
+#! /bin/bash 
 ###
 #  flashtypes.h parser
 #  Copyright (C) Thomas "ShALLaX" Pedley (gentoox@shallax.com)
@@ -64,17 +64,11 @@ echo "parseTypes ${version} - The Raincoat flash parser (c) Thomas \"ShALLaX\" P
 echo "-----------------------------------------------------------------------"
 echo ""
 
-FLASHTYPES="NOTFOUND"
-
 if [ -f "./flashtypes.h" ]; then
 	FLASHTYPES="./flashtypes.h"
-fi
-
-if [ -f "./src/flashtypes.h" ]; then
+elif [ -f "./src/flashtypes.h" ]; then
 	FLASHTYPES="./src/flashtypes.h"
-fi
-
-if [ $FLASHTYPES == "NOTFOUND" ]; then
+else 
 	echo "Couldn't find 'flashtypes.h'."
 	exit 1
 fi
@@ -97,14 +91,12 @@ if [ ! -z $1 ]; then
 			fi
 		fi
 
-		touch ${output} 1> /dev/null 2> /dev/null
+		touch ${output} > /dev/null 2>&1
 		if [ $? != 0 ]; then
 			echo "Error writing to '${output}'."
 			echo "Do you have write permission?"
 			exit 1
 		fi
-
-		rm -rf ${output}
 
 		echo "###" > ${output}
 		echo "# Created by parseTypes (c) Thomas \"ShALLaX\" Pedley" >> ${output}
@@ -126,14 +118,14 @@ for i in `cat $FLASHTYPES`; do
 		size=$i
 	elif [ $found == "prodid" ]; then
 		found="name"
-		name=`echo $i | sed "s/\"//g" | sed "s/\,//g"`
+		name=`echo $i | sed -e "s/\"//g" -e "s/\,//g"`
 	elif [ $found == "manid" ]; then
 		found="prodid"
-		prodid=`echo $i | sed "s/0x//g" | sed "s/\,//g"`
+		prodid=`echo $i | sed -e "s/0x//g" -e "s/\,//g"`
 	elif [ $found == "begin" ]; then
 		if [ $i != "0," ]; then
 			found="manid"
-			manid=`echo $i | sed "s/0x//g" | sed "s/\,//g"`
+			manid=`echo $i | sed -e "s/0x//g" -e "s/\,//g"`
 		else
 			found="unknown"
 		fi
