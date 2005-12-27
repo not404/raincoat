@@ -155,10 +155,14 @@ int main(int argc, char * argv[])
 	char szFilepathProgram[256]="";
 	char szFilepathReadback[256]="";
 	int fileMem;
+
+	int nCountSeen, flashIterator, pathSet;
 #if defined(__FreeBSD__)
 	int fileIO;
 #endif
 	char szConfigFile[1024];
+
+	nCountSeen = flashIterator = pathSet = 0;
 
 	//For some reason (anyone?) we OCCASIONALLY get a SIGTRAP, which
 	//kills us, if we don't ignore it (or handle it).
@@ -166,8 +170,7 @@ int main(int argc, char * argv[])
 	
 	strcpy(szConfigFile,"/etc/raincoat.conf");
 
-		// construct the flash object
-
+	// construct the flash object
 	objectflash.m_bManufacturerId=0;
 	objectflash.m_bDeviceId=0;
 	objectflash.m_dwLengthInBytes=0;
@@ -178,17 +181,12 @@ int main(int argc, char * argv[])
 
 	strcpy(&objectflash.m_szFlashDescription[0], "Unknown");
 
-
-	int nCountSeen=0;
-	int flashIterator=0;
-	int pathSet=0;
 	while((aknownflashtype[nCountSeen].m_bManufacturerId != 0) && (aknownflashtype[nCountSeen].m_bDeviceId != 0)) {
 		nCountSeen++;
 	}
 	printf("raincoat Flasher "RAINCOAT_VERSION" ("__DATE__")\n");
 
-		// map the BIOS region 0xff000000 - 0xffffffff so that we can touch it
-
+	// map the BIOS region 0xff000000 - 0xffffffff so that we can touch it
 	fileMem = open("/dev/mem", O_RDWR);
 	if(fileMem < 0)
 	{
