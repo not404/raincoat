@@ -447,8 +447,7 @@ int main(int argc, char * argv[])
 
 				// terminating entry is all zeros
 				//printf("DEBUG: terminator = %i\n", nCountSeen);
-				KNOWN_FLASH_TYPE *final = &aknownflashtype[nCountSeen];
-				memset(final, 0, sizeof(KNOWN_FLASH_TYPE));
+				memset(&aknownflashtype[nCountSeen], 0, sizeof(KNOWN_FLASH_TYPE));
 			}
 			close(fileRead);
 		} else {

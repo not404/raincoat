@@ -1,4 +1,4 @@
-CC?=		cc
+CC=		gcc-2.95
 CFLAGS?=	-O -pipe
 
 all: raincoat
